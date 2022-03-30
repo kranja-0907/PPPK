@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="3.0" xmlns:edmx="http://schemas.microsoft.com/ado/2009/11/edmx">
+ <!-- EF Designer content (DO NOT EDIT MANUALLY BELOW HERE) -->
+  <edmx:Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
+    <!-- Diagram content (shape and connector positions) -->
+    <edmx:Diagrams>
+      <Diagram DiagramId="7ab19e852c474ad0810d7568c72f2a8b" Name="Diagram1" ZoomLevel="98" >
+        <EntityTypeShape EntityType="Model.Movie" Width="1.5" PointX="3.75" PointY="11" />
+        <EntityTypeShape EntityType="Model.Actor" Width="1.5" PointX="5.5" PointY="11" />
+        <EntityTypeShape EntityType="Model.UploadedFile" Width="1.5" PointX="2" PointY="11" />
+        <AssociationConnector Association="Model.MovieUploadedFile" />
+        <AssociationConnector Association="Model.MovieActor" />
+      </Diagram>
+    </edmx:Diagrams>
+  </edmx:Designer>
+</edmx:Edmx>

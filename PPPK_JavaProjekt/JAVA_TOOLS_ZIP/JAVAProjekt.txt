@@ -1,0 +1,351 @@
+NE DODAJE PREDMET
+NE REFRESHA DODAVANJE PREDMETA KAD SE ODE U 2. TAB
+NE BRIŠE STUDENTA IZ BAZE
+NE PROMJENI SE IME PREDMETA KAD SE IZ EDITA PREDMET
+REFRESHAT COMBOBOX KAD SE PREDMET IZBRIŠE
+
+UVIJEK JE ZADNJA VRIJEDNOST U COMBOBOXU
+
+@FXML
+    private void editSubject(ActionEvent event) {
+        if (tvSubjects.getSelectionModel().getSelectedItem() != null) {
+            bindSubject(tvSubjects.getSelectionModel().getSelectedItem());
+            tpContent.getSelectionModel().select(tabEditSubject);
+        }  
+    }
+    
+    private void bindSubject(SubjectViewModel subjectViewModel) {
+        
+        resetFormSubjects();
+        
+        selectedSubjectViewModel = subjectViewModel != null ? subjectViewModel : new SubjectViewModel(null);
+        tfSubjectName.setText(selectedSubjectViewModel.getSubjectNameProperty().get());
+        tfECTS.setText(String.valueOf(selectedSubjectViewModel.getECTSProperty().get()));
+    }
+
+    private void resetFormSubjects() {
+        validationMapSubjects.values().forEach(l -> l.setVisible(false));
+    }
+
+    @FXML
+    private void deleteSubject(ActionEvent event) {
+        if (tvSubjects.getSelectionModel().getSelectedItem() != null) {
+            listSubjects.remove(tvSubjects.getSelectionModel().getSelectedItem());
+            //listStudents.removeIf(student -> student.getStudentSubjectNameProperty().equals(tvSubjects.getSelectionModel().getSelectedItem().getSubjectNameProperty()));
+        } 
+    }
+    
+    @FXML
+    private void deleteStudent(ActionEvent event) {
+        if (tvStudents.getSelectionModel().getSelectedItem() != null) {
+            listStudents.remove(tvStudents.getSelectionModel().getSelectedItem());
+        } 
+    }
+    
+    @FXML
+    private void commitSubject(ActionEvent event) {
+        if (subjectFormValid()) {
+            
+            selectedSubjectViewModel.getSubject().setSubjectName(tfSubjectName.getText().trim());
+            selectedSubjectViewModel.getSubject().setEcts(Integer.valueOf(tfECTS.getText().trim()));
+            if (selectedSubjectViewModel.getSubject().getIDSubject()== 0) {
+                listSubjects.add(selectedSubjectViewModel);
+            } else{
+                try {
+                    RepositoryFactory.getRepository().updateSubjectt(selectedSubjectViewModel.getSubject());
+                    tvSubjects.refresh();
+                } catch (Exception ex) {
+                    Logger.getLogger(PeopleController.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+            selectedSubjectViewModel = null;
+            tpContent.getSelectionModel().select(tabListSubjects);
+            resetFormSubjects();
+        }
+    }
+
+    private void initSubjectValidation() {
+    validationMapSubjects = Stream.of(
+                new AbstractMap.SimpleImmutableEntry<>(tfSubjectName,lbSubjectName),
+                new AbstractMap.SimpleImmutableEntry<>(tfECTS,lbECTS)
+        ).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+    }
+    private void initStudentValidation() {
+    validationMapStudents = Stream.of(
+                new AbstractMap.SimpleImmutableEntry<>(tfFirstName,lbFirstName),
+                new AbstractMap.SimpleImmutableEntry<>(tfLastName,lbLastName),
+                new AbstractMap.SimpleImmutableEntry<>(tfAge,lbAge),
+                new AbstractMap.SimpleImmutableEntry<>(tfEmail,lbEmail)
+        ).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+    }
+
+    private void initdStudents() {
+        try {
+            RepositoryFactory.getRepository().getStudents().forEach(student -> listStudents.add(new StudentViewModel(student)));
+        } catch (Exception ex) {
+            Logger.getLogger(PeopleController.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    private void initTableSubjects() {
+        tcSubjectName.setCellValueFactory(subject -> subject.getValue().getSubjectNameProperty());
+        tcECTS.setCellValueFactory(subject -> subject.getValue().getECTSProperty().asObject());
+        tvSubjects.setItems(listSubjects);
+    }
+    
+    private void initTableStudents() {
+        tcFirstName.setCellValueFactory(student -> student.getValue().getFirstNameProperty());
+        tcLastName.setCellValueFactory(student -> student.getValue().getLastNameProperty());
+        tcAge.setCellValueFactory(student -> student.getValue().getAgeProperty().asObject());
+        tcEmail.setCellValueFactory(student -> student.getValue().getEmailProperty());
+        tcStudentSubjectName.setCellValueFactory(student -> student.getValue().getStudentSubjectNameProperty());
+        tvStudents.setItems(listStudents);
+    }
+
+    private void addIntegerMask(TextField tf) {
+        UnaryOperator<TextFormatter.Change> filter = change -> {
+            String input = change.getText();
+            if (input.matches("\\d*")) {
+                return change;
+            }
+            return null;
+        };
+        tf.setTextFormatter(new TextFormatter<>(new IntegerStringConverter(), 0, filter));
+    }
+    
+    private Tab priorSubjectTab;
+    private void setSubjectListeners() {
+        /*tpContent.setOnMouseClicked(event ->{
+            if (tpContent.getSelectionModel().getSelectedItem().equals(tabEditSubject) && !tabEditSubject.equals(priorSubjectTab)) {
+                bindSubject(null);
+            }                      
+            priorSubjectTab = tpContent.getSelectionModel().getSelectedItem();
+        });*/   //edita ne dodaje
+        
+        tpContent.setOnMouseClicked(event ->{
+            if (tpContent.getSelectionModel().getSelectedItem().equals(tabEditSubject) && !tabEditSubject.equals(priorSubjectTab)) {
+                bindSubject(null);
+            }                      
+            priorSubjectTab = tpContent.getSelectionModel().getSelectedItem();
+        });   //edita ne dodaje  
+        tpContent.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Tab>() {
+            @Override
+            public void changed(ObservableValue<? extends Tab> observable, Tab oldValue, Tab newValue) {
+                if (tpContent.getSelectionModel().getSelectedItem().equals(tabEditSubject) && !tabEditSubject.equals(priorSubjectTab)) {
+                    bindSubject(null);
+                }
+                priorSubjectTab = tpContent.getSelectionModel().getSelectedItem();
+            }
+        }); //dodaje ne edita
+        listSubjects.addListener(new ListChangeListener<SubjectViewModel>() {
+            @Override
+            public void onChanged(ListChangeListener.Change<? extends SubjectViewModel> change) {
+                if (change.next()) { //provjeri i udi u cursor koji radi promjenu
+                    if (change.wasRemoved()) {
+                        change.getRemoved().forEach(pvm -> {
+                            try {
+                                RepositoryFactory.getRepository().deleteSubjectt(pvm.getSubject());
+                            } catch (Exception ex) {
+                                Logger.getLogger(PeopleController.class.getName()).log(Level.SEVERE, null, ex);
+                            }
+                        });
+                    } else if (change.wasAdded()) {
+                        change.getAddedSubList().forEach(pvm ->{
+                            try {
+                                int idSubject = RepositoryFactory.getRepository().addSubjectt(pvm.getSubject());
+                                pvm.getSubject().setIDSubject(idSubject);
+                            } catch (Exception ex) {
+                                Logger.getLogger(PeopleController.class.getName()).log(Level.SEVERE, null, ex);
+                            }
+                        });
+                    }
+                }
+                
+            }
+        });      
+    }
+    
+    private Tab priorStudentTab;
+    private void setStudentListeners(){
+        tpContent.setOnMouseClicked(event ->{
+            if (tpContent.getSelectionModel().getSelectedItem().equals(tabEditStudent) && !tabEditStudent.equals(priorStudentTab)) {
+                bindStudent(null);
+            }      
+            priorStudentTab = tpContent.getSelectionModel().getSelectedItem();
+        });       
+        listStudents.addListener(new ListChangeListener<StudentViewModel>() {
+            @Override
+            public void onChanged(ListChangeListener.Change<? extends StudentViewModel> change) {
+                if (change.next()) { //provjeri i udi u cursor koji radi promjenu
+                    if (change.wasRemoved()) {
+                        change.getRemoved().forEach(pvm -> {
+                            try {
+                                RepositoryFactory.getRepository().deleteStudent(pvm.getStudent());
+                            } catch (Exception ex) {
+                                Logger.getLogger(PeopleController.class.getName()).log(Level.SEVERE, null, ex);
+                            }
+                        });
+                    } else if (change.wasAdded()) {
+                        change.getAddedSubList().forEach(pvm ->{
+                            try {
+                                int idStudent = RepositoryFactory.getRepository().addStudent(pvm.getStudent());
+                                pvm.getStudent().setIDStudent(idStudent);
+                            } catch (Exception ex) {
+                                Logger.getLogger(PeopleController.class.getName()).log(Level.SEVERE, null, ex);
+                            }
+                        });
+                    }
+                }
+            }
+        });
+    }
+
+    @FXML
+    private void editStudent(ActionEvent event) {
+        if (tvStudents.getSelectionModel().getSelectedItem() != null) {
+            bindStudent(tvStudents.getSelectionModel().getSelectedItem());
+            tpContent.getSelectionModel().select(tabEditStudent);
+        } 
+    }
+    private void initComboBox() {
+        try {
+            RepositoryFactory.getRepository().getSubjects().forEach(subject -> listSubjects.add(new SubjectViewModel(subject)));
+        } catch (Exception ex) {
+            Logger.getLogger(StudentsAndSubjectsController.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        cbSubject.getItems().addAll(listSubjects);
+    }
+
+
+
+    @FXML
+    private void commitStudent(ActionEvent event) {
+        if (studentformValid()) {
+            
+            selectedStudentViewModel.getStudent().setFirstName(tfFirstName.getText().trim());
+            selectedStudentViewModel.getStudent().setLastName(tfLastName.getText().trim());
+            selectedStudentViewModel.getStudent().setAge(Integer.valueOf(tfAge.getText().trim()));
+            selectedStudentViewModel.getStudent().setEmail(tfEmail.getText().trim());
+            selectedStudentViewModel.getStudent().setStudentSubjectName(cbSubject.getSelectionModel().getSelectedItem().toString());
+            selectedStudentViewModel.getStudent().setSubjectID(cbSubject.getSelectionModel().getSelectedItem().getSubject());
+            if (selectedStudentViewModel.getStudent().getIDStudent()== 0) {
+                listStudents.add(selectedStudentViewModel);
+            } else{
+                try {
+                    RepositoryFactory.getRepository().updateStudent(selectedStudentViewModel.getStudent());
+                    tvStudents.refresh();
+                } catch (Exception ex) {
+                    Logger.getLogger(PeopleController.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+            selectedStudentViewModel = null;
+            tpContent.getSelectionModel().select(tabListStudents);
+            resetForm();
+        }
+    }
+    
+    private void bindStudent(StudentViewModel studentViewModel) {
+        
+        resetForm();
+        
+        selectedStudentViewModel = studentViewModel != null ? studentViewModel : new StudentViewModel(null);
+        tfFirstName.setText(selectedStudentViewModel.getFirstNameProperty().get());
+        tfLastName.setText(selectedStudentViewModel.getLastNameProperty().get());
+        tfAge.setText(String.valueOf(selectedStudentViewModel.getAgeProperty().get()));
+        tfEmail.setText(selectedStudentViewModel.getEmailProperty().get());
+        //cbSubject.getSelectionModel().select(0);
+        cbSubject.getItems().forEach(item -> cbSubject.getSelectionModel().select(item.equals(selectedStudentViewModel.getStudentSubjectNameProperty().get()) ? item : item));
+        
+        ivStudent.setImage(
+                selectedStudentViewModel.getPictureProperty().get() != null
+                ? new Image(new ByteArrayInputStream(selectedStudentViewModel.getPictureProperty().get()))
+                : new Image(new File("src/assets/no_image.png").toURI().toString())
+        );
+        
+        /*resetFormSubjects();
+        
+        selectedSubjectViewModel = subjectViewModel != null ? subjectViewModel : new SubjectViewModel(null);
+        tfSubjectName.setText(selectedSubjectViewModel.getSubjectNameProperty().get());
+        tfECTS.setText(String.valueOf(selectedSubjectViewModel.getECTSProperty().get()));*/
+    }
+    
+    private void resetForm() {
+        validationMapStudents.values().forEach(l -> l.setVisible(false));
+        lbIcon.setVisible(false);
+        cbSubject.getSelectionModel().select(0);
+    }
+
+    private boolean studentformValid() {
+        final AtomicBoolean ok = new AtomicBoolean(true);
+        validationMapStudents.keySet().forEach(tf ->{
+            if (tf.getText().trim().isEmpty()
+                    || tf.getId().contains("Email") && !ValidationUtils.isValidEmail(tf.getText().trim())) {
+                ok.set(false);
+                validationMapStudents.get(tf).setVisible(true);
+            } else{
+                validationMapStudents.get(tf).setVisible(false);
+            }        
+        });
+        if (selectedStudentViewModel.getPictureProperty().get() == null) {
+            lbIcon.setVisible(true);
+            ok.set(false);            
+        } else {
+            lbIcon.setVisible(false);
+        }
+        
+        return ok.get();
+    }
+
+    @FXML
+    private void uploadStudent(ActionEvent event) {
+        File file = FileUtils.uploadFileDialog(tfAge.getScene().getWindow(), "jpg", "jpeg", "png");
+        if (file != null) {
+            Image image = new Image(file.toURI().toString());
+            String ext = file.getName().substring(file.getName().lastIndexOf(".") + 1);
+            try {
+                selectedStudentViewModel.getStudent().setPicture(ImageUtils.imageToByteArray(image, ext));
+                ivStudent.setImage(image);
+            } catch (IOException ex) {
+                Logger.getLogger(PeopleController.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+
+    private boolean subjectFormValid() {
+        final AtomicBoolean ok = new AtomicBoolean(true);
+        validationMapSubjects.keySet().forEach(tf ->{
+            if (tf.getText().trim().isEmpty()) {
+                ok.set(false);
+                validationMapSubjects.get(tf).setVisible(true);
+            } else{
+                validationMapSubjects.get(tf).setVisible(false);
+            }        
+        });
+        return ok.get();
+    }
+
+
+
+
+
+@FXML
+    private void commitCourse() {
+        if (formValid()) {
+            selectCourseViewModel.getCourse().setTitle(tfCourseTitle.getText().trim());
+            selectCourseViewModel.getCourse().setEcts( Integer.valueOf(tfEcts.getText().trim()));
+            
+            if (selectCourseViewModel.getCourse().getIDCourse()== 0) {
+                list.add(selectCourseViewModel);
+            }else{
+                try {
+                    RepositoryFactory.getRepository().updateCourse(selectCourseViewModel.getCourse());
+                    tvCourses.refresh();
+                } catch (Exception ex) {
+                    Logger.getLogger(PeopleController.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+            selectCourseViewModel = null;
+            tabListPeople.getSelectionModel().select(tabListCourses);
+            resetForm();
+        }
+    }
