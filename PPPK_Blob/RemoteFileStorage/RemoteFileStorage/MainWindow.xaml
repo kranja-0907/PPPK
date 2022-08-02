@@ -1,0 +1,53 @@
+﻿<Window x:Class="RemoteFileStorage.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:RemoteFileStorage"
+        mc:Ignorable="d"
+        Title="Remote file storage" Height="450" Width="800"
+        WindowStartupLocation="CenterScreen">
+    <Grid Background="{StaticResource GradientBackground}">
+        <Label Content="Choose directoy" HorizontalAlignment="Left" Margin="48,33,0,0" VerticalAlignment="Top"/>
+        <ComboBox
+            IsEditable="True"
+            KeyDown="cbDirectories_KeyDown"
+            TextBoxBase.TextChanged="cbDirectories_TextChanged"
+            x:Name="CbDirectories"
+            HorizontalAlignment="Left" Margin="149,33,0,0" VerticalAlignment="Top" Width="155"/>
+        <ListBox 
+            x:Name="LbItems"
+            SelectionChanged="LbItems_SelectionChanged"
+            DisplayMemberPath="Name"
+            HorizontalAlignment="Left" Height="263" Margin="48,64,0,0" VerticalAlignment="Top" Width="256"/>
+        <Button
+            x:Name="BtnUpload"
+            Content="Upload"
+            Background="Black"
+            Click="BtnUpload_Click"
+            HorizontalAlignment="Left" Margin="48,370,0,0" VerticalAlignment="Top" Width="75"/>
+        <Button 
+            x:Name="BtnDownload"
+            Content="Download"
+            Background="Orange"
+            Click="BtnDownload_Click"
+            HorizontalAlignment="Left" Margin="128,370,0,0" VerticalAlignment="Top" Width="96" RenderTransformOrigin="0.644,0.594"/>
+        <Button
+            x:Name="BtnDelete"
+            Content="Delete"
+            Background="Red"
+            Click="BtnDelete_Click"
+            HorizontalAlignment="Left" Margin="229,370,0,0" VerticalAlignment="Top" Width="75"/>
+        <Label Content="Content type" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="361,64,0,0"/>
+        <TextBox HorizontalAlignment="Left" Height="23" Margin="465,64,0,0" Text="{Binding Properties.ContentType, Mode=OneWay}" IsReadOnly="True" VerticalAlignment="Top" Width="305"/>
+        <Label Content="Content length" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="361,122,0,0"/>
+        <TextBox HorizontalAlignment="Left" Height="23" Margin="465,122,0,0" Text="{Binding Properties.ContentLength, Mode=OneWay}" IsReadOnly="True" VerticalAlignment="Top" Width="305"/>
+        <Label Content="Date created" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="361,183,0,0"/>
+        <TextBox HorizontalAlignment="Left" Height="23" Margin="465,183,0,0" Text="{Binding Properties.CreatedOn, Mode=OneWay}" IsReadOnly="True" VerticalAlignment="Top" Width="305"/>
+        <Label Content="Last modified" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="361,243,0,0"/>
+        <TextBox HorizontalAlignment="Left" Height="23" Margin="465,243,0,0" Text="{Binding Properties.LastModified, Mode=OneWay}" IsReadOnly="True" VerticalAlignment="Top" Width="305"/>
+        <Label Content="Server encrypted" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="361,301,0,0"/>
+        <TextBox HorizontalAlignment="Left" Height="23" Margin="465,301,0,0" Text="{Binding Properties.ServerEncrypted, Mode=OneWay}" IsReadOnly="True" VerticalAlignment="Top" Width="135"/>
+
+    </Grid>
+</Window>
